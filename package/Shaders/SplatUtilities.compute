@@ -88,6 +88,9 @@ float _SplatOpacityScale;
 uint _SHOrder;
 uint _SHOnly;
 
+// Edited: 添加模型中心点和最大距离
+float _MaxDistance; // 最大距离，超过此距离时缩放为0.01
+
 uint _SplatCutoutsCount;
 
 #define SPLAT_CUTOUT_TYPE_ELLIPSOID 0
@@ -199,7 +202,16 @@ void CSCalcViewData (uint3 id : SV_DispatchThreadID)
     float3 centerWorldPos = mul(_MatrixObjectToWorld, float4(splat.pos,1)).xyz;
     float4 centerClipPos = mul(UNITY_MATRIX_VP, float4(centerWorldPos, 1));
     half opacityScale = _SplatOpacityScale;
-    float splatScale = _SplatScale;
+    // float splatScale = _SplatScale;
+
+    // 计算到模型中心点的距离
+    float3 worldModelCenter = mul(_MatrixObjectToWorld, float4(float3(0, 0, 0), 1)).xyz;
+    float distanceToCenter = length(centerWorldPos - worldModelCenter);
+    
+    // 根据距离计算动态缩放
+    float dynamicSplatScale = lerp(_SplatScale, _SplatScale * 0.01, saturate(distanceToCenter / _MaxDistance));
+
+    float splatScale = dynamicSplatScale;
 
     // deleted?
     if (_SplatBitsValid)

@@ -37,6 +37,7 @@ half4 frag (v2f i) : SV_Target
     half4 col = _GaussianSplatRT.Load(int3(i.vertex.xy, 0));
     col.rgb = GammaToLinearSpace(col.rgb);
     col.a = saturate(col.a * 1.5);
+
     return col;
 }
 ENDCG

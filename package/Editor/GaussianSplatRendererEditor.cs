@@ -23,6 +23,7 @@ namespace GaussianSplatting.Editor
         SerializedProperty m_PropAsset;
         SerializedProperty m_PropRenderOrder;
         SerializedProperty m_PropSplatScale;
+        SerializedProperty m_PropMaxDistance;
         SerializedProperty m_PropOpacityScale;
         SerializedProperty m_PropSHOrder;
         SerializedProperty m_PropSHOnly;
@@ -63,6 +64,7 @@ namespace GaussianSplatting.Editor
             m_PropAsset = serializedObject.FindProperty("m_Asset");
             m_PropRenderOrder = serializedObject.FindProperty("m_RenderOrder");
             m_PropSplatScale = serializedObject.FindProperty("m_SplatScale");
+            m_PropMaxDistance = serializedObject.FindProperty("m_MaxDistance");
             m_PropOpacityScale = serializedObject.FindProperty("m_OpacityScale");
             m_PropSHOrder = serializedObject.FindProperty("m_SHOrder");
             m_PropSHOnly = serializedObject.FindProperty("m_SHOnly");
@@ -107,6 +109,7 @@ namespace GaussianSplatting.Editor
             GUILayout.Label("Render Options", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(m_PropRenderOrder);
             EditorGUILayout.PropertyField(m_PropSplatScale);
+            EditorGUILayout.PropertyField(m_PropMaxDistance);
             EditorGUILayout.PropertyField(m_PropOpacityScale);
             EditorGUILayout.PropertyField(m_PropSHOrder);
             EditorGUILayout.PropertyField(m_PropSHOnly);
@@ -178,7 +181,7 @@ namespace GaussianSplatting.Editor
                 return;
             }
 
-            var targetGs = (GaussianSplatRenderer) target;
+            var targetGs = (GaussianSplatRenderer)target;
             if (!targetGs || !targetGs.HasValidAsset || !targetGs.isActiveAndEnabled)
             {
                 EditorGUILayout.HelpBox($"Can't merge into {target.name} (no asset or disable)", MessageType.Warning);
@@ -215,7 +218,7 @@ namespace GaussianSplatting.Editor
             CountTargetSplats(out var totalSplats, out _);
             if (totalSplats > GaussianSplatAsset.kMaxSplats)
                 return;
-            var targetGs = (GaussianSplatRenderer) target;
+            var targetGs = (GaussianSplatRenderer)target;
 
             int copyDstOffset = targetGs.splatCount;
             targetGs.EditSetSplatCount(totalSplats);
@@ -374,7 +377,7 @@ namespace GaussianSplatting.Editor
             return TransformBounds(gs.transform, bounds);
         }
 
-        public static Bounds TransformBounds(Transform tr, Bounds bounds )
+        public static Bounds TransformBounds(Transform tr, Bounds bounds)
         {
             var center = tr.TransformPoint(bounds.center);
 

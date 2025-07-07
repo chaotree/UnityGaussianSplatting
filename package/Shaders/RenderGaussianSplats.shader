@@ -104,6 +104,7 @@ half4 frag (v2f i) : SV_Target
         discard;
 
     half4 res = half4(i.col.rgb * alpha, alpha);
+
     return res;
 }
 ENDCG
