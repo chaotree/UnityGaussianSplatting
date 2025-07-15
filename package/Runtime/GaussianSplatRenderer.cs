@@ -141,13 +141,13 @@ namespace GaussianSplatting.Runtime
 
                 mpb.SetBuffer(GaussianSplatRenderer.Props.OrderBuffer, gs.m_GpuSortKeys);
                 mpb.SetFloat(GaussianSplatRenderer.Props.SplatScale, gs.m_SplatScale);
-                mpb.SetFloat(GaussianSplatRenderer.Props.MaxDistance, gs.m_MaxDistance);
                 mpb.SetFloat(GaussianSplatRenderer.Props.SplatOpacityScale, gs.m_OpacityScale);
                 mpb.SetFloat(GaussianSplatRenderer.Props.SplatSize, gs.m_PointDisplaySize);
                 mpb.SetInteger(GaussianSplatRenderer.Props.SHOrder, gs.m_SHOrder);
                 mpb.SetInteger(GaussianSplatRenderer.Props.SHOnly, gs.m_SHOnly ? 1 : 0);
                 mpb.SetInteger(GaussianSplatRenderer.Props.DisplayIndex, gs.m_RenderMode == GaussianSplatRenderer.RenderMode.DebugPointIndices ? 1 : 0);
                 mpb.SetInteger(GaussianSplatRenderer.Props.DisplayChunks, gs.m_RenderMode == GaussianSplatRenderer.RenderMode.DebugChunkBounds ? 1 : 0);
+                mpb.SetFloat(GaussianSplatRenderer.Props.Reveal, gs.m_Reveal);
 
                 cmb.BeginSample(s_ProfCalcView);
                 gs.CalcViewData(cmb, cam);
@@ -233,9 +233,6 @@ namespace GaussianSplatting.Runtime
         public float m_SplatScale = 1.0f;
         [Range(0.01f, 10000.0f)]
         [Tooltip("最大距离，超过此距离时splat缩放为0.01")]
-        public float m_MaxDistance = 10.0f;
-        [Range(0.05f, 20.0f)]
-        [Tooltip("Additional scaling factor for opacity")]
         public float m_OpacityScale = 1.0f;
         [Range(0, 3)]
         [Tooltip("Spherical Harmonics order to use")]
@@ -245,6 +242,12 @@ namespace GaussianSplatting.Runtime
         [Range(1, 30)]
         [Tooltip("Sort splats only every N frames")]
         public int m_SortNthFrame = 1;
+        [Range(0.0f, 1.0f)]
+        [Tooltip("由点云过渡到地形，1.0f表示完全过渡")]
+        public float m_Reveal = 0.0f;
+        // 模型大小，由BoundingBox计算
+        internal float m_Size;
+        // public float size => m_Size;
 
         public RenderMode m_RenderMode = RenderMode.Splats;
         [Range(1.0f, 15.0f)] public float m_PointDisplaySize = 3.0f;
@@ -309,7 +312,6 @@ namespace GaussianSplatting.Runtime
             public static readonly int SplatViewData = Shader.PropertyToID("_SplatViewData");
             public static readonly int OrderBuffer = Shader.PropertyToID("_OrderBuffer");
             public static readonly int SplatScale = Shader.PropertyToID("_SplatScale");
-            public static readonly int MaxDistance = Shader.PropertyToID("_MaxDistance");
             public static readonly int SplatOpacityScale = Shader.PropertyToID("_SplatOpacityScale");
             public static readonly int SplatSize = Shader.PropertyToID("_SplatSize");
             public static readonly int SplatCount = Shader.PropertyToID("_SplatCount");
@@ -337,6 +339,9 @@ namespace GaussianSplatting.Runtime
             public static readonly int SelectionMode = Shader.PropertyToID("_SelectionMode");
             public static readonly int SplatPosMouseDown = Shader.PropertyToID("_SplatPosMouseDown");
             public static readonly int SplatOtherMouseDown = Shader.PropertyToID("_SplatOtherMouseDown");
+            public static readonly int Reveal = Shader.PropertyToID("_Reveal");
+            public static readonly int Size = Shader.PropertyToID("_Size");
+
         }
 
         [field: NonSerialized] public bool editModified { get; private set; }
@@ -379,10 +384,14 @@ namespace GaussianSplatting.Runtime
 
         const int kGpuViewDataSize = 40;
 
+        // 创建资源
         void CreateResourcesForAsset()
         {
             if (!HasValidAsset)
                 return;
+
+            m_Size = new Vector2(asset.boundsMax.x - asset.boundsMin.x, asset.boundsMax.z - asset.boundsMin.z).magnitude * transform.localScale.x;
+            Debug.Log("m_Size: " + m_Size);
 
             m_SplatCount = asset.splatCount;
             m_GpuPosData = new GraphicsBuffer(GraphicsBuffer.Target.Raw | GraphicsBuffer.Target.CopySource, (int)(asset.posData.dataSize / 4), 4) { name = "GaussianPosData" };
@@ -518,6 +527,8 @@ namespace GaussianSplatting.Runtime
             UpdateCutoutsBuffer();
             cmb.SetComputeIntParam(cs, Props.SplatCutoutsCount, m_Cutouts?.Length ?? 0);
             cmb.SetComputeBufferParam(cs, kernelIndex, Props.SplatCutouts, m_GpuEditCutouts);
+
+            cmb.SetComputeFloatParam(cs, Props.Size, m_Size);
         }
 
         internal void SetAssetDataOnMaterial(MaterialPropertyBlock mat)
@@ -612,10 +623,10 @@ namespace GaussianSplatting.Runtime
             cmb.SetComputeVectorParam(m_CSSplatUtilities, Props.VecScreenParams, screenPar);
             cmb.SetComputeVectorParam(m_CSSplatUtilities, Props.VecWorldSpaceCameraPos, camPos);
             cmb.SetComputeFloatParam(m_CSSplatUtilities, Props.SplatScale, m_SplatScale);
-            cmb.SetComputeFloatParam(m_CSSplatUtilities, Props.MaxDistance, m_MaxDistance);
             cmb.SetComputeFloatParam(m_CSSplatUtilities, Props.SplatOpacityScale, m_OpacityScale);
             cmb.SetComputeIntParam(m_CSSplatUtilities, Props.SHOrder, m_SHOrder);
             cmb.SetComputeIntParam(m_CSSplatUtilities, Props.SHOnly, m_SHOnly ? 1 : 0);
+            cmb.SetComputeFloatParam(m_CSSplatUtilities, Props.Reveal, m_Reveal);
 
             m_CSSplatUtilities.GetKernelThreadGroupSizes((int)KernelIndices.CalcViewData, out uint gsX, out _, out _);
             cmb.DispatchCompute(m_CSSplatUtilities, (int)KernelIndices.CalcViewData, (m_GpuView.count + (int)gsX - 1) / (int)gsX, 1, 1);

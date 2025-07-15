@@ -88,8 +88,9 @@ float _SplatOpacityScale;
 uint _SHOrder;
 uint _SHOnly;
 
-// Edited: 添加模型中心点和最大距离
-float _MaxDistance; // 最大距离，超过此距离时缩放为0.01
+// 自定义参数
+float _Reveal; // 由点云过渡到地形，1.0f表示完全过渡
+float _Size;
 
 uint _SplatCutoutsCount;
 
@@ -207,9 +208,11 @@ void CSCalcViewData (uint3 id : SV_DispatchThreadID)
     // 计算到模型中心点的距离
     float3 worldModelCenter = mul(_MatrixObjectToWorld, float4(float3(0, 0, 0), 1)).xyz;
     float distanceToCenter = length(centerWorldPos - worldModelCenter);
+
+    float weight = smoothstep(_Reveal, _Reveal + 0.02, distanceToCenter * 2.0 / _Size);
     
     // 根据距离计算动态缩放
-    float dynamicSplatScale = lerp(_SplatScale, _SplatScale * 0.01, saturate(distanceToCenter / _MaxDistance));
+    float dynamicSplatScale = lerp(_SplatScale, _SplatScale * 0.01, weight);
 
     float splatScale = dynamicSplatScale;
 

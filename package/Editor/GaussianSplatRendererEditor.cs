@@ -23,7 +23,6 @@ namespace GaussianSplatting.Editor
         SerializedProperty m_PropAsset;
         SerializedProperty m_PropRenderOrder;
         SerializedProperty m_PropSplatScale;
-        SerializedProperty m_PropMaxDistance;
         SerializedProperty m_PropOpacityScale;
         SerializedProperty m_PropSHOrder;
         SerializedProperty m_PropSHOnly;
@@ -36,6 +35,7 @@ namespace GaussianSplatting.Editor
         SerializedProperty m_PropShaderDebugPoints;
         SerializedProperty m_PropShaderDebugBoxes;
         SerializedProperty m_PropCSSplatUtilities;
+        SerializedProperty m_PropReveal;
 
         bool m_ResourcesExpanded = false;
         int m_CameraIndex = 0;
@@ -64,7 +64,6 @@ namespace GaussianSplatting.Editor
             m_PropAsset = serializedObject.FindProperty("m_Asset");
             m_PropRenderOrder = serializedObject.FindProperty("m_RenderOrder");
             m_PropSplatScale = serializedObject.FindProperty("m_SplatScale");
-            m_PropMaxDistance = serializedObject.FindProperty("m_MaxDistance");
             m_PropOpacityScale = serializedObject.FindProperty("m_OpacityScale");
             m_PropSHOrder = serializedObject.FindProperty("m_SHOrder");
             m_PropSHOnly = serializedObject.FindProperty("m_SHOnly");
@@ -77,6 +76,7 @@ namespace GaussianSplatting.Editor
             m_PropShaderDebugPoints = serializedObject.FindProperty("m_ShaderDebugPoints");
             m_PropShaderDebugBoxes = serializedObject.FindProperty("m_ShaderDebugBoxes");
             m_PropCSSplatUtilities = serializedObject.FindProperty("m_CSSplatUtilities");
+            m_PropReveal = serializedObject.FindProperty("m_Reveal");
 
             s_AllEditors.Add(this);
         }
@@ -109,11 +109,11 @@ namespace GaussianSplatting.Editor
             GUILayout.Label("Render Options", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(m_PropRenderOrder);
             EditorGUILayout.PropertyField(m_PropSplatScale);
-            EditorGUILayout.PropertyField(m_PropMaxDistance);
             EditorGUILayout.PropertyField(m_PropOpacityScale);
             EditorGUILayout.PropertyField(m_PropSHOrder);
             EditorGUILayout.PropertyField(m_PropSHOnly);
             EditorGUILayout.PropertyField(m_PropSortNthFrame);
+            EditorGUILayout.PropertyField(m_PropReveal);
 
             EditorGUILayout.Space();
             GUILayout.Label("Debugging Tweaks", EditorStyles.boldLabel);
