@@ -390,7 +390,7 @@ namespace GaussianSplatting.Runtime
             if (!HasValidAsset)
                 return;
 
-            m_Size = new Vector2(asset.boundsMax.x - asset.boundsMin.x, asset.boundsMax.z - asset.boundsMin.z).magnitude * transform.localScale.x;
+            m_Size = (asset.boundsMax - asset.boundsMin).magnitude;
             Debug.Log("m_Size: " + m_Size);
 
             m_SplatCount = asset.splatCount;
